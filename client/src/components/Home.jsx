@@ -8,8 +8,10 @@ const Home = () => {
   const [currentLength, setcurrentLength] = useState(1);
   const [currentTechnologies, setcurrentTechnologies] = useState("");
   const [headshot, setHeadshot] = useState(null);
+  const [companyInfo, setcompanyInfo] = useState([{ name: "", position: "" }]);
   const [loading, setLoading] = useState(false);
 
+  // Handle for submit
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({
@@ -22,6 +24,26 @@ const Home = () => {
     setLoading(true);
   };
 
+  // handle add company
+  const handleAddCompany = () => {
+    setcompanyInfo([...companyInfo, { name: "", position: "" }]);
+  };
+
+  // handle removing a selected company from the list
+  const handleRemoveCompany = (i) => {
+    const newCompanyInfo = companyInfo.filter((company, index) => index !== i);
+    setcompanyInfo(newCompanyInfo);
+  };
+
+  // handle update company info
+  const handleUpdateCompany = (e, i) => {
+    const { name, value } = e.target;
+    const newCompanyInfo = [...companyInfo];
+    newCompanyInfo[i][name] = value;
+    setcompanyInfo(newCompanyInfo);
+  };
+
+  // handle loading state
   if (loading) {
     return <Loading />;
   }
@@ -86,6 +108,47 @@ const Home = () => {
           accept="image/x-png,image/jpeg"
           onChange={(e) => setHeadshot(e.target.files[0])}
         />
+        {/* Previous companies */}
+        <h3>Companies you've worked at</h3>
+        <form onSubmit={(e) => e.preventDefault()}>
+          {companyInfo.map((company, index) => (
+            <div className="nestedContainer" key={index}>
+              <div className="companies">
+                <label htmlFor="name">Company Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  onChange={(e) => handleUpdateCompany(e, index)}
+                />
+              </div>
+              <div className="companies">
+                <label htmlFor="position">Position Held</label>
+                <input
+                  type="text"
+                  name="position"
+                  required
+                  onChange={(e) => handleUpdateCompany(e, index)}
+                />
+              </div>
+              <div className="btn__group">
+                {companyInfo.length - 1 === index && companyInfo.length < 4 && (
+                  <button id="addBtn" onClick={handleAddCompany}>
+                    Add
+                  </button>
+                )}
+                {companyInfo.length > 1 && (
+                  <button
+                    id="deleteBtn"
+                    onClick={() => handleRemoveCompany(index)}
+                  >
+                    Del
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </form>
         <button>CREATE RESUME</button>
       </form>
     </div>
