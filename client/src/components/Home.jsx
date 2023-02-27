@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import Loading from "./Loading";
 import "../index.css";
 
@@ -14,13 +15,27 @@ const Home = () => {
   // Handle for submit
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log({
-      fullname,
-      currentPosition,
-      currentLength,
-      currentTechnologies,
-      headshot,
-    });
+
+    const formData = new FormData();
+    formData.append("fullname", fullname);
+    formData.append("currentPosition", currentPosition);
+    formData.append("currentLength", currentLength);
+    formData.append("currentTechnologies", currentTechnologies);
+    formData.append("headshot", headshot, headshot.name);
+    formData.append("workHistory", JSON.stringify(companyInfo));
+
+    axios
+      .post("http://localhost:4000/resume/create", formData, {})
+      .then((res) => {
+        if (res.data.message) {
+          console.log(res.data);
+          Navigate("/resume");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
     setLoading(true);
   };
 
