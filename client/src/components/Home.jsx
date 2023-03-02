@@ -1,105 +1,96 @@
-import { useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Loading from "./Loading";
-import "../index.css";
+import axios from "axios";
 
-const Home = () => {
-  const [fullname, setfullname] = useState("");
-  const [currentPosition, setcurrentPosition] = useState("");
-  const [currentLength, setcurrentLength] = useState(1);
-  const [currentTechnologies, setcurrentTechnologies] = useState("");
+const Home = ({ setResult }) => {
+  const [fullName, setFullName] = useState("");
+  const [currentPosition, setCurrentPosition] = useState("");
+  const [currentLength, setCurrentLength] = useState(1);
+  const [currentTechnologies, setCurrentTechnologies] = useState("");
   const [headshot, setHeadshot] = useState(null);
-  const [companyInfo, setcompanyInfo] = useState([{ name: "", position: "" }]);
+  const [companyInfo, setCompanyInfo] = useState([{ name: "", position: "" }]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // Handle for submit
-  const handleSubmit = (e) => {
+  const handleAddCompany = () =>
+    setCompanyInfo([...companyInfo, { name: "", position: "" }]);
+
+  const handleRemoveCompany = (index) => {
+    const list = [...companyInfo];
+    list.splice(index, 1);
+    setCompanyInfo(list);
+  };
+  const handleUpdateCompany = (e, index) => {
+    const { name, value } = e.target;
+    const list = [...companyInfo];
+    list[index][name] = value;
+    setCompanyInfo(list);
+  };
+
+  const handleFormSubmit = (e) => {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append("fullname", fullname);
+    formData.append("headshotImage", headshot, headshot.name);
+    formData.append("fullName", fullName);
     formData.append("currentPosition", currentPosition);
     formData.append("currentLength", currentLength);
     formData.append("currentTechnologies", currentTechnologies);
-    formData.append("headshot", headshot, headshot.name);
     formData.append("workHistory", JSON.stringify(companyInfo));
-
     axios
       .post("http://localhost:4000/resume/create", formData, {})
       .then((res) => {
         if (res.data.message) {
-          console.log(res.data);
-          Navigate("/resume");
+          setResult(res.data.data);
+          navigate("/resume");
         }
       })
-      .catch((err) => {
-        console.log(err);
-      });
-
+      .catch((err) => console.error(err));
     setLoading(true);
   };
-
-  // handle add company
-  const handleAddCompany = () => {
-    setcompanyInfo([...companyInfo, { name: "", position: "" }]);
-  };
-
-  // handle removing a selected company from the list
-  const handleRemoveCompany = (i) => {
-    const newCompanyInfo = companyInfo.filter((company, index) => index !== i);
-    setcompanyInfo(newCompanyInfo);
-  };
-
-  // handle update company info
-  const handleUpdateCompany = (e, i) => {
-    const { name, value } = e.target;
-    const newCompanyInfo = [...companyInfo];
-    newCompanyInfo[i][name] = value;
-    setcompanyInfo(newCompanyInfo);
-  };
-
-  // handle loading state
   if (loading) {
     return <Loading />;
   }
-
   return (
     <div className="app">
       <h1>Resume Builder</h1>
-      <p>Generate a good resume with AI</p>
-      <form onSubmit={handleSubmit} method="POST" encType="multipart/form-data">
-        <label htmlFor="fullname">Enter your full name</label>
+      <p>Generate a resume with ChatGPT in few seconds</p>
+      <form
+        onSubmit={handleFormSubmit}
+        method="POST"
+        encType="multipart/form-data"
+      >
+        <label htmlFor="fullName">Enter your full name</label>
         <input
           type="text"
-          name="fullname"
-          id="fullname"
           required
-          value={fullname}
-          onChange={(e) => setfullname(e.target.value)}
+          name="fullName"
+          id="fullName"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
         />
         <div className="nestedContainer">
           <div>
             <label htmlFor="currentPosition">Current Position</label>
             <input
               type="text"
-              name="currentPosition"
-              id="currentPosition"
               required
+              name="currentPosition"
               className="currentInput"
               value={currentPosition}
-              onChange={(e) => setcurrentPosition(e.target.value)}
+              onChange={(e) => setCurrentPosition(e.target.value)}
             />
           </div>
           <div>
             <label htmlFor="currentLength">For how long? (year)</label>
             <input
               type="number"
-              name="currentLength"
-              id="currentLength"
               required
+              name="currentLength"
               className="currentInput"
               value={currentLength}
-              onChange={(e) => setcurrentLength(e.target.value)}
+              onChange={(e) => setCurrentLength(e.target.value)}
             />
           </div>
           <div>
@@ -110,7 +101,7 @@ const Home = () => {
               name="currentTechnologies"
               className="currentInput"
               value={currentTechnologies}
-              onChange={(e) => setcurrentTechnologies(e.target.value)}
+              onChange={(e) => setCurrentTechnologies(e.target.value)}
             />
           </div>
         </div>
@@ -123,47 +114,48 @@ const Home = () => {
           accept="image/x-png,image/jpeg"
           onChange={(e) => setHeadshot(e.target.files[0])}
         />
-        {/* Previous companies */}
+
         <h3>Companies you've worked at</h3>
-        <form onSubmit={(e) => e.preventDefault()}>
-          {companyInfo.map((company, index) => (
-            <div className="nestedContainer" key={index}>
-              <div className="companies">
-                <label htmlFor="name">Company Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  onChange={(e) => handleUpdateCompany(e, index)}
-                />
-              </div>
-              <div className="companies">
-                <label htmlFor="position">Position Held</label>
-                <input
-                  type="text"
-                  name="position"
-                  required
-                  onChange={(e) => handleUpdateCompany(e, index)}
-                />
-              </div>
-              <div className="btn__group">
-                {companyInfo.length - 1 === index && companyInfo.length < 4 && (
-                  <button id="addBtn" onClick={handleAddCompany}>
-                    Add
-                  </button>
-                )}
-                {companyInfo.length > 1 && (
-                  <button
-                    id="deleteBtn"
-                    onClick={() => handleRemoveCompany(index)}
-                  >
-                    Del
-                  </button>
-                )}
-              </div>
+
+        {companyInfo.map((company, index) => (
+          <div className="nestedContainer" key={index}>
+            <div className="companies">
+              <label htmlFor="name">Company Name</label>
+              <input
+                type="text"
+                name="name"
+                required
+                onChange={(e) => handleUpdateCompany(e, index)}
+              />
             </div>
-          ))}
-        </form>
+            <div className="companies">
+              <label htmlFor="position">Position Held</label>
+              <input
+                type="text"
+                name="position"
+                required
+                onChange={(e) => handleUpdateCompany(e, index)}
+              />
+            </div>
+
+            <div className="btn__group">
+              {companyInfo.length - 1 === index && companyInfo.length < 4 && (
+                <button id="addBtn" onClick={handleAddCompany}>
+                  Add
+                </button>
+              )}
+              {companyInfo.length > 1 && (
+                <button
+                  id="deleteBtn"
+                  onClick={() => handleRemoveCompany(index)}
+                >
+                  Del
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+
         <button>CREATE RESUME</button>
       </form>
     </div>
